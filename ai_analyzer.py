@@ -1,11 +1,16 @@
 import os
+import streamlit as st
 from typing import Dict, List
 import json
 from google import genai
 from openai import OpenAI
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
+api_key = (
+    st.secrets.get("GEMINI_API_KEY", None)
+    # or os.getenv("GEMINI_API_KEY")
+)
 
 class AIAnalyzer:
     """Use LLM to generate incident reports and analysis."""

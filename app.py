@@ -10,8 +10,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from fpdf import FPDF
 import json
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
+api_key = (
+    st.secrets.get("GEMINI_API_KEY", None)
+    # or os.getenv("GEMINI_API_KEY")
+)
 
 
 # Page config
