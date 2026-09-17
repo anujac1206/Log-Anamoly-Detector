@@ -10,7 +10,7 @@
 # pytz==2023.3.post1
 # fpdf2==2.7.6
 
-streamlit==1.39.0
+streamlit>=1.49.0
 pandas==2.2.3
 numpy==1.26.4
 plotly==5.24.1
