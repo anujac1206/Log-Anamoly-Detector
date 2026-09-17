@@ -12,10 +12,10 @@ from fpdf import FPDF
 import json
 # from dotenv import load_dotenv
 # load_dotenv()
-api_key = (
-    st.secrets.get("GEMINI_API_KEY", None)
+# api_key = (
+#     st.secrets.get("GEMINI_API_KEY", None)
     # or os.getenv("GEMINI_API_KEY")
-)
+# )
 
 
 # Page config
@@ -54,7 +54,14 @@ def generate_pdf_report(stats, anomalies):
     pdf.set_font("helvetica", "B", 14)
     pdf.set_text_color(33, 37, 41)
     pdf.cell(0, 10, "1. Log Statistics Summary", ln=True)
-    pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 190, pdf.get_y())
+    page_width = pdf.w - 2 * pdf.l_margin
+
+    pdf.line(
+        pdf.l_margin,
+        pdf.get_y(),
+        pdf.l_margin + page_width,
+        pdf.get_y()
+    )
     pdf.ln(4)
     
     pdf.set_font("helvetica", "", 11)
@@ -100,16 +107,17 @@ def generate_pdf_report(stats, anomalies):
             
             pdf.set_font("helvetica", "", 10)
             pdf.set_text_color(51, 51, 51)
-            pdf.multi_cell(0, 6, f"Description: {a['description']}")
-            
+            pdf.set_x(10)
+            pdf.multi_cell(190, 6, f"Description: {a['description']}")
             # Print key details
             details_str = ", ".join(f"{k}: {v}" for k, v in a['details'].items() if not isinstance(v, (list, dict)))
             if details_str:
-                pdf.multi_cell(0, 6, f"Details: {details_str}")
+                pdf.set_x(10)
+                pdf.multi_cell(190, 6, f"Details: {details_str}")
             
             pdf.ln(4)
             
-    return pdf.output()
+    return bytes(pdf.output(dest="S"))
 
 # Title
 st.title("🔍 Log Anomaly Detector")
@@ -122,22 +130,21 @@ with st.sidebar:
     # API Key selection
     api_provider = st.radio("AI Provider", ["Google Gemini (Free)", "OpenAI"], key="provider")
     
-    if api_provider == "Google Gemini (Free)":
-        gemini_key = st.text_input(
-        "Gemini API Key",
-        value=os.getenv("GEMINI_API_KEY", ""),
-        type="password",
-        key="gemini_key"
-    )
+    # if api_provider == "Google Gemini (Free)":
+    #     gemini_key = st.secrets.get("GEMINI_API_KEY", "")
 
-    if not gemini_key:
-        st.warning("⚠️ No API key provided. Get one free at https://ai.google.dev/")
-        if not gemini_key:
-            st.warning("⚠️ No API key provided. Get one free at https://ai.google.dev/")
-    else:
-        openai_key = st.text_input("OpenAI API Key", type="password", key="openai_key")
-        if not openai_key:
-            st.warning("⚠️ No API key provided. Get one at https://platform.openai.com/api-keys")
+    #     if gemini_key:
+    #         st.success("✅ Gemini API key loaded from Streamlit Secrets")
+    #     else:
+    #         st.warning("⚠️ GEMINI_API_KEY not found in Streamlit Secrets")
+
+    # else:
+    #     openai_key = st.secrets.get("OPENAI_API_KEY", "")
+
+    #     if openai_key:
+    #         st.success("✅ OpenAI API key loaded from Streamlit Secrets")
+    #     else:
+    #         st.warning("⚠️ OPENAI_API_KEY not found in Streamlit Secrets")
     
     st.markdown("---")
     
@@ -388,8 +395,17 @@ with tab2:
                         
                         st.markdown("---")
                         # AI Verification Action
-                        api_key = st.session_state.get('gemini_key') or st.session_state.get('openai_key')
-                        provider = "gemini" if st.session_state.get('provider') == "Google Gemini (Free)" else "openai"
+                        provider = (
+                            "gemini"
+                            if st.session_state.get("provider") == "Google Gemini (Free)"
+                            else "openai"
+                        )
+
+                        api_key = (
+                            st.secrets.get("GEMINI_API_KEY")
+                            if provider == "gemini"
+                            else st.secrets.get("OPENAI_API_KEY")
+                        )
                         
                         if st.button(f"Verify Threat with AI", key=f"verify_btn_{i}"):
                             if api_key:
@@ -436,9 +452,17 @@ with tab3:
             )
             
             if st.button("Generate Analysis"):
-                api_key = st.session_state.get('gemini_key') or st.session_state.get('openai_key')
-                provider = "gemini" if st.session_state.get('provider') == "Google Gemini (Free)" else "openai"
-                
+                provider = (
+                    "gemini"
+                    if st.session_state.get("provider") == "Google Gemini (Free)"
+                    else "openai"
+                )
+
+                api_key = (
+                    st.secrets.get("GEMINI_API_KEY")
+                    if provider == "gemini"
+                    else st.secrets.get("OPENAI_API_KEY")
+                )
                 if api_key:
                     with st.spinner("Generating analysis with AI..."):
                         analyzer = AIAnalyzer(api_key=api_key, provider=provider)
