@@ -1,8 +1,11 @@
 import os
 from typing import Dict, List
 import json
-import google.generativeai as genai
+from google import genai
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class AIAnalyzer:
     """Use LLM to generate incident reports and analysis."""
@@ -15,8 +18,7 @@ class AIAnalyzer:
         if self.provider == "gemini":
             if not api_key:
                 api_key = os.getenv("GEMINI_API_KEY")
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel("gemini-pro")
+            self.client = genai.Client(api_key=api_key)
         else:
             if not api_key:
                 api_key = os.getenv("OPENAI_API_KEY")
@@ -25,11 +27,14 @@ class AIAnalyzer:
     def _call_llm(self, prompt: str) -> str:
         """Call the appropriate LLM provider."""
         if self.provider == "gemini":
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt
+            )
             return response.text
         else:
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.2
             )
@@ -159,11 +164,14 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
         
         try:
             if self.provider == "gemini":
-                response = self.model.generate_content(prompt)
+                response = self.client.models.generate_content(
+                    model="gemini-3.6-flash",
+                    contents=prompt
+                )
                 response_text = response.text.strip()
             else:
                 response = self.client.chat.completions.create(
-                    model="gpt-4-turbo",
+                    model="gpt-4o-mini",
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.1
                 )
